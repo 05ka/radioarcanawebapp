@@ -2,7 +2,6 @@ import streamlit as st
 import os
 import random
 import cv2
-import pygame
 import numpy as np
 from itertools import cycle
 from PIL import Image
@@ -115,6 +114,7 @@ def main():
         st.markdown('<div class="main-content">', unsafe_allow_html=True)
         cols = st.columns(len(folders))
         image_placeholders = [col.empty() for col in cols]
+        audio_elements = [col.empty() for col in cols]
         
         # Mostrar las imágenes actuales si existen
         for i, img in enumerate(st.session_state.current_images):
@@ -160,10 +160,6 @@ def main():
         folder_images[folder] = [p[0] for p in pairs]
         folder_sounds[folder] = [p[1] for p in pairs]
 
-    # Initialize Pygame
-    pygame.init()
-    pygame.mixer.init()
-
     # Initialize indexes
     indexes = {folder: cycle(range(len(folder_images[folder]))) for folder in folders}
     already_selected = set()
@@ -202,15 +198,11 @@ def main():
                 image_placeholders[i].image(pil_image, caption=None, use_container_width=True)
                 st.session_state.current_images[i] = pil_image
 
-            # Play sound
+            # Reproducir audio usando HTML5 audio
             if st.session_state.playing:
-                try:
-                    sound = pygame.mixer.Sound(sound_path)
-                    sound.set_volume(st.session_state.volume)
-                    sound.play()
-                    time.sleep(sound.get_length() / st.session_state.speed)
-                except pygame.error as e:
-                    st.error(f"Error loading sound: {sound_path}. Error: {e}")
+                audio_elements[i].audio(sound_path, start_time=0)
+                # Esperar un tiempo aproximado basado en la duración típica del audio
+                time.sleep(2.0 / st.session_state.speed)  # Ajusta este valor según la duración típica de tus audios
 
         if st.session_state.playing:
             time.sleep((st.session_state.pause_duration / 1300) / st.session_state.speed)
