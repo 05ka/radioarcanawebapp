@@ -6,7 +6,6 @@ import numpy as np
 from itertools import cycle
 from PIL import Image
 import time
-import base64
 
 st.set_page_config(layout="wide")
 
@@ -57,24 +56,25 @@ st.markdown("""
         .main-content {
             margin-bottom: 100px;
         }
-
-        /* Ocultar controles de audio por defecto */
-        audio {
-            display: none;
-        }
     </style>
 """, unsafe_allow_html=True)
 
-def autoplay_audio(file_path: str):
-    with open(file_path, "rb") as f:
-        data = f.read()
-        b64 = base64.b64encode(data).decode()
-        md = f"""
-            <audio autoplay="true">
-                <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
-            </audio>
-            """
-        st.markdown(md, unsafe_allow_html=True)
+# Configurar el video de fondo
+st.markdown("""
+    <style>
+        #myVideo {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+        }
+    </style>
+    <video autoplay muted loop id="myVideo">
+        <source src="https://static.streamlit.io/examples/star.mp4" type="video/mp4">
+        Tu navegador no admite video HTML5.
+    </video>
+""", unsafe_allow_html=True)
 
 # Define folders, pause duration, and loading logic
 folders = ["1", "2", "3"]
@@ -114,7 +114,7 @@ def main():
         st.markdown('<div class="main-content">', unsafe_allow_html=True)
         cols = st.columns(len(folders))
         image_placeholders = [col.empty() for col in cols]
-        audio_placeholders = [col.empty() for col in cols]
+        audio_elements = [col.empty() for col in cols]
         
         # Mostrar las imágenes actuales si existen
         for i, img in enumerate(st.session_state.current_images):
@@ -198,10 +198,9 @@ def main():
                 image_placeholders[i].image(pil_image, caption=None, use_container_width=True)
                 st.session_state.current_images[i] = pil_image
 
-            # Reproducir audio con autoplay
+            # Reproducir audio usando HTML5 audio
             if st.session_state.playing:
-                with audio_placeholders[i]:
-                    autoplay_audio(sound_path)
+                audio_elements[i].audio(sound_path, start_time=0)
                 # Esperar un tiempo aproximado basado en la duración típica del audio
                 time.sleep(2.0 / st.session_state.speed)  # Ajusta este valor según la duración típica de tus audios
 
